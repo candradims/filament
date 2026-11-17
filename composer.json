@@ -7,6 +7,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-pdo_pgsql": "*",
+        "filament/filament": "~5.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0"
     },
@@ -48,9 +50,14 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "test:postgres": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php vendor/phpunit/phpunit/phpunit --configuration=phpunit.postgres.xml"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
