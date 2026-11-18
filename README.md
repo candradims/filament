@@ -1,4 +1,4 @@
-Panduan project: [Setup Laravel, Filament, PostgreSQL, admin, dan DBeaver](docs/SETUP.md).
+Jalankan project Laravel, Filament, dan PostgreSQL dari terminal Ubuntu WSL dengan `ddev start`. Panduan menjalankan aplikasi dan menyambungkan DBeaver tersedia di [docs/SETUP.md](docs/SETUP.md).
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

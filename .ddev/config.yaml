@@ -1,0 +1,10 @@
+name: app-first
+type: laravel
+docroot: public
+php_version: "8.4"
+webserver_type: nginx-fpm
+database:
+  type: postgres
+  version: "16"
+composer_version: "2"
+disable_settings_management: true

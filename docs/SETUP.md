@@ -2,17 +2,49 @@
 
 Project ini menggunakan PostgreSQL sebagai database utama dan Filament pada `/admin`.
 
-## Environment yang diverifikasi
+## Menjalankan project dengan DDEV di Ubuntu WSL
+
+Buka terminal Ubuntu. Gunakan salinan kerja di filesystem Ubuntu dan jalankan perintah dari root project.
+
+```bash
+cd ~/projects/app-first
+ddev start
+ddev describe
+ddev launch /admin
+```
+
+URL admin default adalah <https://app-first.ddev.site/admin>. Jika port router berubah, gunakan URL dari `ddev describe`. DDEV mengelola Nginx, PHP 8.4, dan PostgreSQL 16 melalui Docker Engine di Ubuntu. `ddev stop` menghentikan layanan project dan mempertahankan volume database.
+
+Untuk checkout baru, buat `.env` dari `.env.example` jika belum tersedia. Jalankan `ddev composer install` setelah `ddev start`. Jalankan `ddev artisan key:generate` hanya jika `APP_KEY` masih kosong. Gunakan `ddev artisan db:show --database=pgsql` untuk memeriksa target sebelum menjalankan `ddev artisan migrate`. Jika membawa data lama, ikuti langkah backup dan impor untuk database kosong di [rencana implementasi](IMPLEMENTATION_DDEV.md).
+
+Jika database kosong dan belum punya akun admin, jalankan `ddev artisan make:filament-user --panel=admin` lalu `ddev artisan app:grant-admin <email>` dengan mengganti placeholder email. Jika database berasal dari impor, gunakan akun admin yang sudah ada. Composer menerbitkan aset bawaan Filament saat instalasi.
+
+### DBeaver Windows
+
+Buat koneksi PostgreSQL baru dengan host dan port **eksternal** dari `ddev describe`. Untuk setup ini, nama database, username, dan password development masing-masing `db`. Setelah **Test Connection**, buka `Schemas > public > Tables`. Laravel menggunakan `db:5432` di jaringan container. Jika port host dipilih otomatis, perbarui koneksi DBeaver dengan nilai terbaru setelah restart.
+
+Saat verifikasi dari Windows, PostgreSQL DDEV dapat diakses pada `127.0.0.1:22519` dan menampilkan sembilan tabel. Ambil port terbaru dari `ddev describe` sebelum menyimpan koneksi DBeaver.
+
+```sql
+SELECT current_database(), current_user;
+SELECT migration, batch FROM public.migrations ORDER BY id;
+```
+
+## Referensi setup PHP/PostgreSQL native di Windows
+
+Bagian ini mendokumentasikan environment Windows yang menjadi sumber data awal.
+
+### Environment yang diverifikasi
 
 - Windows, PHP 8.4.4, Composer 2.10.2, PostgreSQL 16.
 - Laravel 13.42.0, Filament 5.11.4, Livewire 4.4.8; versi pasti tersimpan di `composer.lock`.
 - Ekstensi PHP: `pdo_pgsql`, `intl`, `mbstring`, `dom`, `fileinfo`, dan `zip`, beserta ekstensi standar Laravel. `composer check-platform-reqs` memeriksa dependency aktual.
-- Tidak ada konfigurasi DDEV/Docker. PHP dan PostgreSQL berjalan langsung di Windows.
+- Pada setup native, PHP dan PostgreSQL berjalan langsung di Windows.
 - Pada komputer ini, `intl`, `pdo_pgsql`, `pgsql`, dan `zip` diaktifkan di `C:\php-8.4.4\php.ini`. Restart proses PHP yang sudah berjalan setelah mengubah ekstensi.
 
 Rujukan: [instalasi Filament 5](https://filamentphp.com/docs/5.x/introduction/installation) dan [otorisasi panel](https://filamentphp.com/docs/5.x/users/overview).
 
-## Konfigurasi lokal
+### Konfigurasi lokal native
 
 Isi `.env` menggunakan koneksi berikut. Password lokal tidak disimpan dalam dokumentasi atau source control.
 
@@ -23,17 +55,19 @@ DB_PORT=5432
 DB_DATABASE=filament
 DB_USERNAME=admin
 DB_PASSWORD="<password PostgreSQL>"
+APP_URL=http://127.0.0.1:8000
+SESSION_SECURE_COOKIE=false
 ```
 
 Role aplikasi `admin` memiliki database `filament`, tanpa izin superuser, membuat database, atau membuat role. Kredensial superuser PostgreSQL tidak digunakan oleh aplikasi.
 
-Session, cache, dan queue memakai driver `database`; tabelnya disediakan migration bawaan Laravel. `.env.example` berisi template PostgreSQL tanpa password.
+Session, cache, dan queue memakai driver `database`. Migration bawaan Laravel menyediakan tabelnya. `.env.example` sekarang berisi pengaturan development DDEV.
 
-## Menjalankan project pada checkout baru
+### Menjalankan checkout baru dengan PHP native
 
 1. Pastikan database dan role PostgreSQL sudah tersedia. Jika sudah berisi data, gunakan kredensial database tersebut dan periksa migration yang tertunda sebelum menjalankannya.
 2. Jalankan `composer install`.
-3. Salin `.env.example` menjadi `.env` hanya jika `.env` belum ada, lalu isi password database.
+3. Salin `.env.example` menjadi `.env` hanya jika `.env` belum ada, lalu ganti pengaturan koneksi, URL, dan cookie dengan nilai native di atas.
 4. Jalankan `php artisan key:generate` hanya untuk instalasi baru yang belum memiliki `APP_KEY`.
 5. Jalankan:
 
@@ -46,7 +80,9 @@ php artisan migrate
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-Buka <http://127.0.0.1:8000/admin>. Aset bawaan Filament diterbitkan melalui Composer hook `filament:upgrade`; panel bawaan tidak memerlukan build Vite tambahan.
+Buka <http://127.0.0.1:8000/admin>. Aset bawaan Filament diterbitkan melalui Composer hook `filament:upgrade` saat pemasangan dependency. Halaman welcome menggunakan CSS statis yang disertakan langsung dalam view.
+
+Untuk pengembangan lokal, `composer dev` menjalankan `php artisan serve`. Jika membutuhkan pemrosesan queue, jalankan `php artisan queue:work --tries=1` pada terminal terpisah.
 
 Gunakan `migrate` untuk menerapkan migration yang belum dijalankan. Hindari `migrate:fresh`, `migrate:refresh`, atau `db:wipe` pada database berisi data. Database SQLite lama tidak dihapus maupun dipindahkan secara otomatis.
 
